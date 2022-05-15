@@ -6,13 +6,14 @@ import com.mmall.common.ServerResponse;
 import com.mmall.pojo.User;
 import com.mmall.service.IUserService;
 import com.mmall.service.impl.UserServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
+import java.util.Map;
 
 /**
  * @author bruce
@@ -26,17 +27,26 @@ public class UserController {
     @Autowired
     private IUserService iUserService;
 
+    private static Logger logger = LoggerFactory.getLogger(UserController.class);
+
+
     /**
-     * 用户登录
-     * @param username
-     * @param password
+     *
+     * @param reqMap
      * @param session
      * @return
      */
     @RequestMapping(value = "login", method = RequestMethod.POST)
     @ResponseBody
-    public ServerResponse<User> login(String username, String password, HttpSession session) {
-        ServerResponse<User> response = iUserService.login(username, password);
+    public ServerResponse<User> login(@RequestBody Map reqMap, HttpSession session) {
+        ServerResponse<User> response = null;
+        String username = (String) reqMap.get("username");
+        String password = (String) reqMap.get("password");
+        try {
+            response = iUserService.login(username, password);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
         if (response.isSuccess()) {
             session.setAttribute(Const.CURRENT_USER, response.getData());
         }
@@ -53,7 +63,7 @@ public class UserController {
 
     @RequestMapping(value = "register",method = RequestMethod.POST)
     @ResponseBody
-    public ServerResponse<String> register(User user){
+    public ServerResponse<String> register(@RequestBody User user){
         return iUserService.register(user);
     }
 
